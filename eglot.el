@@ -867,6 +867,16 @@ treated as in `eglot--dbind'."
    (eglot--request server :workspace/executeCommand
                    `(:command ,(format "%s" command) :arguments ,arguments))))
 
+(defun eglot--plist-delete (plist property)
+  "Delete PROPERTY from PLIST.
+This is in contrast to merely setting it to 0."
+  (let (p)
+    (while plist
+      (if (not (eq property (car plist)))
+	  (setq p (plist-put p (car plist) (nth 1 plist))))
+      (setq plist (cddr plist)))
+    p))
+
 (cl-defgeneric eglot-execute (server action)
   "Ask SERVER to execute ACTION.
 ACTION is an LSP object of either `CodeAction' or `Command' type."
@@ -879,7 +889,7 @@ ACTION is an LSP object of either `CodeAction' or `Command' type."
                (eglot-server-capable :codeActionProvider :resolveProvider))
           (eglot-execute server (eglot--request server :codeAction/resolve action))
         (when edit (eglot--apply-workspace-edit edit this-command))
-        (when command (eglot--request server :workspace/executeCommand command)))))))
+        (when command (eglot--request server :workspace/executeCommand (eglot--plist-delete command :title))))))))
 
 (cl-defgeneric eglot-initialization-options (server)
   "JSON object to send under `initializationOptions'."
